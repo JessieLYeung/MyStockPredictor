@@ -73,7 +73,7 @@ if show_data:
 
 if predict_tomorrow:
     st.header("🔮 Prediction")
-    st.success(f"Predicted S&P 500 Close for {predict_date.date()} using {selected_model}: **${prediction:.2f}**")
+    st.success(f"Predicted S&P 500 Close for {predict_date} using {selected_model}: **${prediction:.2f}**")
     st.info("This is based on the latest available data. Actual prices may vary due to market conditions.")
 
 # Model Performance
