@@ -1,0 +1,8 @@
+pandas
+yfinance
+scikit-learn
+matplotlib
+streamlit
+joblib
+flake8
+pytest
