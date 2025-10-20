@@ -43,7 +43,7 @@ for horizon in horizons:
 sp500 = sp500.dropna()
 
 # Streamlit app
-st.title("📈 S&P 500 Price Predictor")
+st.title("📈 MyStockPredictor")
 st.markdown("Predict tomorrow's S&P 500 closing price using machine learning.")
 
 # Compute prediction for tomorrow
