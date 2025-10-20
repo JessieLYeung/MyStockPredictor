@@ -77,25 +77,22 @@ def backtest(data, model, predictors, start=2500, step=250):
     return pd.concat(all_predictions)
 
 def compare_models(data, predictors):
-    """Compare multiple regression models."""
+    """Compare multiple regression models and return all."""
     models = {
         "Random Forest": RandomForestRegressor(n_estimators=200, min_samples_split=50, random_state=1),
         "XGBoost": XGBRegressor(n_estimators=200, learning_rate=0.1, random_state=1),
         "Linear Regression": LinearRegression()
     }
     
-    results = {}
+    trained_models = {}
     for name, model in models.items():
         predictions = backtest(data, model, predictors)
         mae = mean_absolute_error(predictions["Tomorrow"], predictions["Predictions"])
         rmse = np.sqrt(mean_squared_error(predictions["Tomorrow"], predictions["Predictions"]))
-        results[name] = {"MAE": mae, "RMSE": rmse, "Model": model}
+        trained_models[name] = {"Model": model, "MAE": mae, "RMSE": rmse}
         print(f"{name} - MAE: {mae:.2f}, RMSE: {rmse:.2f}")
     
-    # Select best model (lowest MAE)
-    best_name = min(results, key=lambda x: results[x]["MAE"])
-    print(f"Best model: {best_name}")
-    return results[best_name]["Model"]
+    return trained_models
 
 if os.path.exists("sp500.csv"):
     sp500 = pd.read_csv("sp500.csv", index_col=0)
@@ -127,13 +124,18 @@ if __name__ == "__main__":
     sp500, new_predictors = add_features(sp500)
 
     print("Comparing models...")
-    best_model = compare_models(sp500, new_predictors)
+    trained_models = compare_models(sp500, new_predictors)
 
-    # Save the best model
-    joblib.dump(best_model, 'sp500_model.pkl')
-    print("Best model saved as sp500_model.pkl")
+    # Save all models
+    joblib.dump(trained_models, 'sp500_models.pkl')
+    print("All models saved as sp500_models.pkl")
 
-    # Predict tomorrow
+    # For default, use the best
+    best_name = min(trained_models, key=lambda x: trained_models[x]["MAE"])
+    best_model = trained_models[best_name]["Model"]
+    print(f"Best model: {best_name}")
+
+    # Predict tomorrow with best model
     latest_data = sp500.iloc[-1:][new_predictors]
     tomorrow_pred = best_model.predict(latest_data)[0]
     print(f"Predicted tomorrow's S&P 500 close: {tomorrow_pred:.2f}")

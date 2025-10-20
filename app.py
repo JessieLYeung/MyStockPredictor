@@ -7,12 +7,12 @@ from sklearn.ensemble import RandomForestRegressor
 import numpy as np
 import matplotlib.pyplot as plt
 
-# Load or train model
-if os.path.exists('sp500_model.pkl'):
-    model = joblib.load('sp500_model.pkl')
-    st.success("Model loaded successfully.")
+# Load models
+if os.path.exists('sp500_models.pkl'):
+    trained_models = joblib.load('sp500_models.pkl')
+    st.success("Models loaded successfully.")
 else:
-    st.error("Model not found. Please run predict_tomorrow.py first to train and save the model.")
+    st.error("Models not found. Please run predict_tomorrow.py first.")
     st.stop()
 
 # Load data
@@ -46,7 +46,17 @@ sp500 = sp500.dropna()
 st.title("📈 MyStockPredictor")
 st.markdown("Predict tomorrow's S&P 500 closing price using machine learning.")
 
-# Compute prediction for tomorrow
+# Sidebar for customization
+st.sidebar.header("Customization")
+selected_model = st.sidebar.selectbox("Select Model", list(trained_models.keys()))
+predict_date = st.sidebar.date_input("Predict for Date", value=pd.to_datetime("today"))
+
+# Get selected model
+model = trained_models[selected_model]["Model"]
+mae = trained_models[selected_model]["MAE"]
+rmse = trained_models[selected_model]["RMSE"]
+
+# Compute prediction for selected date (for now, only today is supported)
 latest_data = sp500.iloc[-1:][new_predictors]
 prediction = model.predict(latest_data)[0]
 
@@ -63,16 +73,18 @@ if show_data:
 
 if predict_tomorrow:
     st.header("🔮 Prediction")
-    st.success(f"Predicted S&P 500 Close for Tomorrow ({pd.to_datetime('today').date()}): **${prediction:.2f}**")
+    st.success(f"Predicted S&P 500 Close for {predict_date.date()} using {selected_model}: **${prediction:.2f}**")
     st.info("This is based on the latest available data. Actual prices may vary due to market conditions.")
 
 # Model Performance
 st.header("📈 Model Performance")
-st.write("**Backtest Results (Best Model: Linear Regression):**")
-st.write("- Mean Absolute Error (MAE): ~15 points")
-st.write("- Root Mean Squared Error (RMSE): ~25 points")
-st.write("- Compared models: Random Forest, XGBoost, Linear Regression (Linear Regression selected for lowest MAE).")
+st.write(f"**Selected Model: {selected_model}**")
+st.write(f"- Mean Absolute Error (MAE): {mae:.2f} points")
+st.write(f"- Root Mean Squared Error (RMSE): {rmse:.2f} points")
 st.write("- Baseline: Random guessing would be ~50% accurate for direction.")
+st.write("**Model Comparison:**")
+for name, info in trained_models.items():
+    st.write(f"- {name}: MAE {info['MAE']:.2f}, RMSE {info['RMSE']:.2f}")
 
 # Additional Chart
 st.header("📉 Prediction Distribution")
