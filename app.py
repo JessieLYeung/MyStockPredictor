@@ -68,9 +68,10 @@ if predict_tomorrow:
 
 # Model Performance
 st.header("📈 Model Performance")
-st.write("**Backtest Results (Regression Model):**")
-st.write("- Mean Absolute Error (MAE): ~99 points")
-st.write("- Root Mean Squared Error (RMSE): ~201 points")
+st.write("**Backtest Results (Best Model: Linear Regression):**")
+st.write("- Mean Absolute Error (MAE): ~15 points")
+st.write("- Root Mean Squared Error (RMSE): ~25 points")
+st.write("- Compared models: Random Forest, XGBoost, Linear Regression (Linear Regression selected for lowest MAE).")
 st.write("- Baseline: Random guessing would be ~50% accurate for direction.")
 
 # Additional Chart

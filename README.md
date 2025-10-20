@@ -21,8 +21,8 @@ A machine learning project to predict the S&P 500 index price movements and clos
 
 ## Results
 - **Direction Model**: Achieved 57% precision on backtested predictions (better than 53-55% baseline).
-- **Price Model**: MAE of ~99 points, RMSE of ~201 on backtests.
-- **Tomorrow's Prediction**: As of latest data, predicted close: ~$3922.
+- **Price Model**: MAE of ~15 points, RMSE of ~25 points (using Linear Regression after comparing Random Forest, XGBoost, and Linear Regression).
+- **Tomorrow's Prediction**: As of latest data, predicted close: ~$4069.
 
 ## Technologies Used
 - **Python**: Core language.

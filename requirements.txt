@@ -6,3 +6,4 @@ streamlit
 joblib
 flake8
 pytest
+xgboost

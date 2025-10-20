@@ -9,9 +9,11 @@ import pandas as pd
 import yfinance as yf
 import os
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 import numpy as np
 import joblib
+from xgboost import XGBRegressor
 
 # Step 1: Download S&P 500 prices using yfinance
 # This avoids overfitting by using real historical data, not simulated
@@ -74,6 +76,27 @@ def backtest(data, model, predictors, start=2500, step=250):
         all_predictions.append(combined)
     return pd.concat(all_predictions)
 
+def compare_models(data, predictors):
+    """Compare multiple regression models."""
+    models = {
+        "Random Forest": RandomForestRegressor(n_estimators=200, min_samples_split=50, random_state=1),
+        "XGBoost": XGBRegressor(n_estimators=200, learning_rate=0.1, random_state=1),
+        "Linear Regression": LinearRegression()
+    }
+    
+    results = {}
+    for name, model in models.items():
+        predictions = backtest(data, model, predictors)
+        mae = mean_absolute_error(predictions["Tomorrow"], predictions["Predictions"])
+        rmse = np.sqrt(mean_squared_error(predictions["Tomorrow"], predictions["Predictions"]))
+        results[name] = {"MAE": mae, "RMSE": rmse, "Model": model}
+        print(f"{name} - MAE: {mae:.2f}, RMSE: {rmse:.2f}")
+    
+    # Select best model (lowest MAE)
+    best_name = min(results, key=lambda x: results[x]["MAE"])
+    print(f"Best model: {best_name}")
+    return results[best_name]["Model"]
+
 if os.path.exists("sp500.csv"):
     sp500 = pd.read_csv("sp500.csv", index_col=0)
 else:
@@ -103,25 +126,14 @@ if __name__ == "__main__":
     sp500 = preprocess_data(sp500)
     sp500, new_predictors = add_features(sp500)
 
-    # Initial model
-    model = RandomForestRegressor(n_estimators=100, min_samples_split=100, random_state=1)
-    predictions = backtest(sp500, model, ["Close", "Volume", "Open", "High", "Low"])
-    mae = mean_absolute_error(predictions["Tomorrow"], predictions["Predictions"])
-    rmse = np.sqrt(mean_squared_error(predictions["Tomorrow"], predictions["Predictions"]))
-    print(f"Initial MAE: {mae:.2f}, RMSE: {rmse:.2f}")
+    print("Comparing models...")
+    best_model = compare_models(sp500, new_predictors)
 
-    # Improved model
-    model = RandomForestRegressor(n_estimators=200, min_samples_split=50, random_state=1)
-    predictions = backtest(sp500, model, new_predictors)
-    mae = mean_absolute_error(predictions["Tomorrow"], predictions["Predictions"])
-    rmse = np.sqrt(mean_squared_error(predictions["Tomorrow"], predictions["Predictions"]))
-    print(f"Improved MAE: {mae:.2f}, RMSE: {rmse:.2f}")
-
-    # Save the model
-    joblib.dump(model, 'sp500_model.pkl')
-    print("Model saved as sp500_model.pkl")
+    # Save the best model
+    joblib.dump(best_model, 'sp500_model.pkl')
+    print("Best model saved as sp500_model.pkl")
 
     # Predict tomorrow
     latest_data = sp500.iloc[-1:][new_predictors]
-    tomorrow_pred = model.predict(latest_data)[0]
+    tomorrow_pred = best_model.predict(latest_data)[0]
     print(f"Predicted tomorrow's S&P 500 close: {tomorrow_pred:.2f}")
